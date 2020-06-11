@@ -1,0 +1,25 @@
+#!/bin/bash
+# escape all " and ' with \
+# pdf2txt book.pdf book.txt	
+# split -b 4900 book.txt book
+
+export GOOGLE_APPLICATION_CREDENTIALS=/home/d-elete/Downloads/(edit).json
+
+Book=`cat $1`
+curl -H "Authorization: Bearer $(gcloud auth application-default print-access-token)"   -H "Content-Type: application/json; charset=utf-8" --data "{
+    'input':{
+     'ssml':'<speak>$Book</speak>'
+    },
+    'voice':{
+      'languageCode':'en-us',
+      'name':'en-US-Wavenet-D',
+      'ssmlGender':'MALE'
+    },
+    'audioConfig':{
+      'speakingRate': 1.2,
+      'pitch': -2,
+      'audioEncoding':'MP3'
+    }
+  }" "https://texttospeech.googleapis.com/v1/text:synthesize" > speakit.txt
+
+cat speakit.txt | grep 'audioContent' | sed 's|audioContent| |' | tr -d '\n ":{},' > tmp.txt && base64 tmp.txt --decode > $1.mp3 && rm tmp.txt
